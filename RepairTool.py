@@ -1,12 +1,6 @@
 import re
-from DataStructure import *
+from DetectBug import parse_function
 from collections import OrderedDict
-
-
-def parse_function(target_file):
-    global_env = Environment()
-    Function.read_function_from_file_include_struct(target_file, global_env)
-    return global_env
 
 
 class BranchInformation(object):
@@ -31,6 +25,14 @@ class BranchInformation(object):
         self.construct_branch_map()
         self.construct_back_order_map()
         self.find_all_main_path_node()
+
+    def repair_redundant_barrier_function(self, target_barrier):
+        new_code_lst = list()
+        for each_line in self.raw_codes:
+            if each_line != target_barrier:
+                new_code_lst.append(each_line)
+        print "\n".join(new_code_lst)
+        return "\n".join(new_code_lst)
 
     def generate_path_to_end(self, start_node):
         visited_node = set()
@@ -760,6 +762,26 @@ def test_arrayfire_warp_reduce1():
     write_patch_to_file("./arrayfire-repair/reduce1-repair.ll", content)
 
 
+def test_arrayfire_compute_median():
+    global_env = parse_function("./arrayfire-repair/computeMedian.ll")
+    target_function = global_env.get_value("@_Z13computeMedianj")
+    branch = BranchInformation(
+        [item.strip() for item in target_function.raw_codes.split("\n") if len(item.strip()) != 0])
+    content = branch.repair_redundant_barrier_function("call void @__syncthreads(), !dbg !31")
+    content = 'define void @_Z13computeMedianj(i32 %iterations) uwtable noinline {' + content + "}\n"
+    write_patch_to_file("./arrayfire-repair/computeMedian-repair.ll", content)
+
+
+def test_arrayfire_harris_response():
+    global_env = parse_function("./arrayfire-repair/harris_response.ll")
+    target_function = global_env.get_value("@_Z15harris_responsePfS_PKfS1_S1_jS_jfj")
+    branch = BranchInformation(
+        [item.strip() for item in target_function.raw_codes.split("\n") if len(item.strip()) != 0])
+    content = branch.repair_redundant_barrier_function("call void @__syncthreads(), !dbg !110")
+    content = 'define void @_Z15harris_responsePfS_PKfS1_S1_jS_jfj(float* %score_out, float* %size_out, float* %x_in, float* %y_in, float* %scl_in, i32 %total_feat, float* %image_ptr, i32 %block_size, float %k_thr, i32 %patch_size) uwtable noinline {' + content + "}\n"
+    write_patch_to_file("./arrayfire-repair/harris_response-repair.ll", content)
+
+
 def write_patch_to_file(file_path, content):
     with open(file_path, 'w') as f:
         f.write(content)
@@ -769,7 +791,8 @@ if __name__ == "__main__":
     from time import time
 
     start_time = time()
-    test_arrayfire_descriptor()
+    test_arrayfire_compute_median()
+    # test_arrayfire_descriptor()
     # test_arrayfire_select_matches_1()
     # test_arrayfire_hamming_matcher_unroll_2()
     # test_arrayfire_hamming_matcher_2()

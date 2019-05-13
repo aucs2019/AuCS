@@ -104,6 +104,20 @@ def test_gunrock_xmrig():
     })
 
 
+def test_arrayfire_compute_median():
+    auto_test_target_function_advanced("./arrayfire-repair/computeMedian-repair.ll", "@_Z13computeMedianj", {
+        'global': None,
+        'shared': "@_ZZ13computeMedianjE5s_idx",
+    })
+
+
+def test_arrayfire_harris_response():
+    auto_test_target_function_advanced("./arrayfire-repair/harris_response.ll", "@_Z15harris_responsePfS_PKfS1_S1_jS_jfj", {
+        'global': "%image_ptr",
+        'shared': None,
+    })
+
+
 def test_convnet2_kTile():
     auto_test_target_function("./cuda-convnet2-new-bug/new-func.ll", "@_Z5kTilePKfPfjjjj", {
         "global": "%tgt",
@@ -202,13 +216,6 @@ def test_arrayfire_hamming_matcher_2():
     }, fixed_dimension=[(1, 1, 1), (36, 1, 1)], used_default_dimension=True, initial_function=dummy_data_for_shared_memory_hamming3)
 
 
-def test_arrayfire_hamming_matcher_unroll_2():
-    auto_test_target_function_dynamical("./arrayfire-repair/hamming4.ll", "@_Z22hamming_matcher_unrollPjS_jj", {
-        "global": None,
-        "shared": "@_ZZ22hamming_matcher_unrollPjS_jjE6s_dist"
-    }, fixed_dimension=[(1, 1, 1), (36, 1, 1)], used_default_dimension=True, initial_function=dummy_data_for_shared_memory_hamming4)
-
-
 def test_arrayfire_JacobiSVD():
     auto_test_target_function_dynamical("./arrayfire-repair/JacobiSVD.ll", "@_Z9JacobiSVDPiS_ii", {
         "global": None,
@@ -224,17 +231,10 @@ def test_arrayfire_reduce1():
 
 
 def test_arrayfire_descriptor():
-    auto_test_target_function_dynamical("./arrayfire-repair/Descriptor-second.ll", "@_Z17computeDescriptorPfjjPKfS1_PKjS1_S1_S1_jiiffi", {
+    auto_test_target_function_dynamical("./arrayfire-repair/Descriptor-first.ll", "@_Z17computeDescriptorPfjjPKfS1_PKjS1_S1_S1_jiiffi", {
         "global": None,
         "shared": "@_ZZ17computeDescriptorPfjjPKfS1_PKjS1_S1_S1_jiiffiE7shrdMem"
     }, fixed_dimension=[(1, 1, 1), (3, 10, 1)], used_default_dimension=True)
-
-
-def test_arrayfire_select_matches_1():
-    auto_test_target_function_dynamical("./arrayfire-repair/select_matches-delete.ll", "@_Z14select_matchesPKjPKijji", {
-        "global": None,
-        "shared": "@_ZZ14select_matchesPKjPKijjiE6s_dist",
-    })
 
 
 def test_gklee_test_barrier1():
@@ -258,18 +258,11 @@ def dummy_data_for_shared_memory_hamming3(global_env):
     return global_env
 
 
-def dummy_data_for_shared_memory_hamming4(global_env):
-    generate_memory_container(["@_ZZ22hamming_matcher_unrollPjS_jjE6s_dist"], global_env)
-    shared_memory = global_env.get_value("memory_container")
-    generate_random_data_for_memory(shared_memory, "@_ZZ22hamming_matcher_unrollPjS_jjE6s_dist", 100)
-    return global_env
-
-
 if __name__ == "__main__":
-    # test_arrayfire_select_matches_1()
-    # test_arrayfire_hamming_matcher_unroll_2()
+    test_arrayfire_harris_response()
+    # test_arrayfire_compute_median()
     # test_arrayfire_hamming_matcher_2()
-    test_arrayfire_descriptor()  # need future work!
+    # test_arrayfire_descriptor()  #
     # test_arrayfire_reduce1()
     # test_arrayfire_JacobiSVD()
     # test_arrayfire_hamming_matcher_1()
