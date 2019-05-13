@@ -1,6 +1,12 @@
 import re
-from DetectBug import parse_function
+from DataStructure import *
 from collections import OrderedDict
+
+
+def parse_function(target_file):
+    global_env = Environment()
+    Function.read_function_from_file_include_struct(target_file, global_env)
+    return global_env
 
 
 class BranchInformation(object):
