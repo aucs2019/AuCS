@@ -797,7 +797,8 @@ if __name__ == "__main__":
     from time import time
 
     start_time = time()
-    test_arrayfire_compute_median()
+    test_arrayfire_harris_response()
+    # test_arrayfire_compute_median()
     # test_arrayfire_descriptor()
     # test_arrayfire_select_matches_1()
     # test_arrayfire_hamming_matcher_unroll_2()
